@@ -4,7 +4,7 @@
 
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
 
-const defaultID = 940;
+const defaultID = 943;
 
 // Promise Pending
 const dataPromise = d3.json(url);
@@ -20,7 +20,7 @@ let defaultItem = {};
 
 function updateMetrics(item) {
 
-  console.log("update Metrics for: " + item);
+  console.log("update Metrics for: " + item.id);
 
   metricsPanel = document.querySelector(".panel-body");
 
@@ -78,40 +78,106 @@ function updateMetrics(item) {
 
 function getTopTen(item) {
 
-
   console.log("Get top ten for: " + item.id);
   let sample_data = {};
+  let top_ten_otus = [];
+  let top_ten_values = [];
+  let top_ten_labels = [];
+  let sampIndx = 0;
 
   var microbeDiv = document.getElementById("bar");
 
+  // console.log("div: " + microbeDiv);
+  console.log("samples: " + samples[0].otu_ids);
+
   sample_data = samples.find(function(item) {
-    return samples.id === item.id;
+
+    for (let i = 0; i < samples.length; i++) {
+        
+      // sampIndx = i;  
+      return samples[i].id === item.id;
+    };
   });
 
+  // defaultItem = volunteers.find(function(volunteer) {
+    // return volunteer.id === defaultID;
+  // });
+
+  console.log("sample data: " + sample_data.otu_ids);
+
+  // This is taking advantage of the fact that the data is already sorted
+  top_ten_otus = sample_data.otu_ids.slice(0, 10);
+  top_ten_values = sample_data.sample_values.slice(0, 10); 
+  top_ten_labels = sample_data.otu_labels.slice(0, 10);
+
+  console.log("top ten otus: " + top_ten_otus);
+  console.log("top ten data: " + top_ten_values);
+  console.log("top ten microbes: " + top_ten_labels);
 
   // Define plot data and layout
   var microbe_data = [{
-    x: [1, 2, 3, 4],
-    y: [10, 15, 13, 17],
-    type: 'bar'
+    x: top_ten_values,
+    y: top_ten_otus,
+    mode:  'markers',
+    type: 'bar',
+    orientation: 'h',
+    width: 225,
+    text: top_ten_labels
+    // marker: {
+    //  color: 'blue',
+     // width: 500
+    //}
   }];
 
   var layout = {
-    title: 'Top Ten Most Prevalent Microbes',
-    xaxis: { title: 'X-axis' },
-    yaxis: { title: 'Y-axis' }
+    title: {
+      text: 'Top Ten Most Prevalent Microbes',
+      font: {
+        size: 20,
+        weight: 'bold'
+      }
+    },
+    xaxis: {
+      title: {
+        text: 'Number of Microbes',
+        font: {
+          size: 14,
+          weight: 'bold'
+        }
+      },
+      tickfont: {
+        size: 12
+      }
+    },
+    yaxis: {
+      title: {
+        text: 'OTU',
+        font: {
+          size: 14,
+          weight: 'bold'
+        }
+      },
+      // categoryorder: 'array',
+      // tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      ticktext: top_ten_otus,
+      tickfont: {
+        size: 12
+      }
+    }
   };
   
-  
+
   // Create the plot using Plotly.js
   Plotly.newPlot(microbeDiv, microbe_data, layout);
-  
 
 };
   
 function getWashings(item) {
 
   console.log("get washings for: " + item);
+
+  var washingDiv = document.getElementById("gauge");
+
 };
   
 function drawBubbleChart(item) {
@@ -159,12 +225,14 @@ function init() {
       // Access the dropdown menu element
       var dropdownMenu = document.getElementById("selDataset");
 
+      let sample1 = defaultID;
+
       // Create options for the dropdown menu
       for (let i = 0; i < names.length; i++) {
         
-        let sample1 = names[i];
+        sample1 = names[i];
  
-        var option = document.createElement("option");
+        option = document.createElement("option");
         option.value = sample1;
         option.text = sample1;
         dropdownMenu.appendChild(option);
@@ -189,35 +257,44 @@ function init() {
 //   backtick char for fstring   `
 
 
+function optionChanged(newNum) {} {
+  // On change to the DOM, call getNewData()
+  d3.selectAll("#selDataset").on("change", getNewData);
+};
 
-function optionChanged(idNum) {
+// This function is called when a dropdown menu item is selected
+function getNewData() {
+
+  console.log("Getting new data");
 
   let dropdownMenu = d3.select("#selDataset");
+
   // Assign the value of the dropdown menu option to a letiable
-  let dataset = dropdownMenu.property("value");
+  let newID = dropdownMenu.property("value");
 
-  // Initialize an empty array for the country's data
-  // let data = [];
+  console.log("New id is: " + newID);
 
-  //if (dataset == 'australia') {
-    //  data = australia;
-  //}
+  newItem = volunteers.find(function(volunteer) {
+        return volunteer.id === newID;
+      });
 
-  // Call function to update the chart
-// updatePlotly(data);
+      console.log("New item is: " + newitem.ethnicity);
+
+  // Call function to update the charts and graphs
+ updatePlotly(newItem);
 };
 
 
+// Update the plots for the new data item
+function updatePlotly(newVolunteer) {
 
+        // update all of the plots and charts
+        updateMetrics(newVolunteer);
+        getTopTen(newVolunteer);
+        drawBubbleChart(newVolunteer.id);
+        getWashings(newVolunteer);
 
-// On change to the DOM, call getData()
-// d3.selectAll("#selDataset").on("change", getData);
-
-
-
-// Update the restyled plot's values
-function updatePlotly(newdata) {
-  Plotly.restyle("bar", "values", [newdata]);
+  // Plotly.restyle("bar", "values", [newdata]);
 };
 
 init();
