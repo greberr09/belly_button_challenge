@@ -24,15 +24,15 @@ var data = [
       bordercolor: "grey",
 
       steps: [
-        { range: [0, 1], color: "red" },
-        { range: [1, 2], color: "crimson"},
+        { range: [0, 1], color: "crimson" },
+        { range: [1, 2], color: "red"},
         { range: [2, 3], color: "darkorange" },
         { range: [3, 4], color: "lightpink" },
-        { range: [4, 5], color: "tan" },
-        { range: [5, 6], color: "lightgreen" },
-        { range: [6, 7], color: "lightseagreen" },
-        { range: [7, 8], color: "mediumseagreen" },
-        { range: [8, 9], color: "lawngreen" }
+        { range: [4, 5], color: "linen" },
+        { range: [5, 6], color: "lightcyan" },
+        { range: [6, 7], color: "greenyellow" },
+        { range: [7, 8], color: "lightgreen" },
+        { range: [8, 9], color: "limegreen" }
       ],
 
       threshold: {

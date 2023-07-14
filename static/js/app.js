@@ -31,38 +31,6 @@ let volunteers = [];
 // the sample data taken from each volunteer
 let samples = [];
 
-// Fetch the JSON data and log it
-// Do this only once so promise does not keep refreshing
-
-d3.json(url).then(function(data) {
-      console.log(data);
-
-      names = data.names;
-      volunteers = data.metadata;
-      samples = data.samples;
-      fieldnames = Object.keys(volunteers[0]);
-      console.log("Volunteer ids: " + names);
-      // console.log(names.length);
-      // console.log(volunteers[0]["ethnicity"]);
-      // console.log(fieldnames);
-      console.log("getting data for volunter 3: " + volunteers[2]);
-
-      // Access the dropdown menu element
-      var dropdownMenu = document.getElementById("selDataset");
-
-      let sample = defaultID;
-
-      // Create the options for the dropdown menu
-      for (let i = 0; i < names.length; i++) {
-        
-        sample = names[i];
- 
-        option = document.createElement("option");
-        option.value = sample;
-        option.text = sample;
-        dropdownMenu.appendChild(option);
-      };
-});
 
 // function to display a table of the demograpic data about the selected volunteer
 function updateMetrics(item) {
@@ -70,11 +38,18 @@ function updateMetrics(item) {
     console.log("update Metrics for: " + item.id);
 
     metricsPanel = document.querySelector(".panel-body");
+    var container = document.getElementById("your-div-id");
+    metricsPanel.innerHTML = "";
 
     // Create the table structure
     var table = document.createElement("table");
+    table.innerHTML = "";
+
     var thead = document.createElement("thead");
+    thead.innerHTML = "";
+
     var tbody = document.createElement("tbody");
+    tbody.innerHTML = "";
   
     // Create the header row
     headerRow = document.createElement("tr");
@@ -99,11 +74,14 @@ function updateMetrics(item) {
         indexData = document.createElement("td");
         indexData.textContent = index;
         indexData.style.paddingRight = "12px"; 
+        indexData.style.fontSize = "13px";
 
         // Create table data for value of metric
         valueData = document.createElement("td");
         valueData.textContent = value;
-        valueData.style.paddingRight = "12px";
+        valueData.style.paddingRight = "50px";
+        valueData.style.whiteSpace = "nowrap";
+        valueData.style.fontSize = "13px";
 
         // Append the table data to the row
         row.appendChild(indexData);
@@ -124,7 +102,7 @@ function updateMetrics(item) {
 function getTopTen(item) {
 
     console.log("Get top ten for: " + item.id);
-    let sample_data = {};
+    let sampleData = {};
     let top_ten_otus = [];
     let top_ten_values = [];
     let top_ten_labels = [];
@@ -134,7 +112,7 @@ function getTopTen(item) {
     // console.log("div: " + microbeDiv);
     console.log("samples: " + samples[0].otu_ids);
 
-    sample_data = samples.find(function(item) {
+    sampleData = samples.find(function(item) {
 
         for (let i = 0; i < samples.length; i++) {
       
@@ -142,22 +120,22 @@ function getTopTen(item) {
         };
     });
 
-    console.log("sample data: " + sample_data.otu_ids);
+    console.log("sample data: " + sampleData.otu_ids);
 
     // This is taking advantage of the fact that the data is already sorted
-    top_ten_otus = sample_data.otu_ids.slice(0, 10);
-    top_ten_values = sample_data.sample_values.slice(0, 10); 
-    top_ten_labels = sample_data.otu_labels.slice(0, 10);
+    top_ten_otus = sampleData.otu_ids.slice(0, 10);
+    top_ten_values = sampleData.sample_values.slice(0, 10); 
+    top_ten_labels = sampleData.otu_labels.slice(0, 10);
 
     console.log("top ten otus: " + top_ten_otus);
     console.log("top ten data: " + top_ten_values);
     console.log("top ten microbes: " + top_ten_labels);
 
     // Define plot data and layout
-    var microbe_data = [{
+    var microbeData = [{
         x: top_ten_values,
         y: top_ten_otus,
-        // mode:  'markers',
+        mode:  'markers',
         type: 'bar',
         orientation: 'h',
         width: 225,
@@ -172,7 +150,7 @@ function getTopTen(item) {
         title: {
           text: 'Top Ten Most Prevalent Microbes',
           font: {
-            size: 20,
+            size: 18,
             weight: 'bold'
         }
       },
@@ -206,32 +184,53 @@ function getTopTen(item) {
     };
   
     // Create the plot using Plotly.js
-    Plotly.newPlot(microbeDiv, microbe_data, layout);
+    Plotly.newPlot(microbeDiv, microbeData, layout);
 
+    
 };
   
 // function to draw a bubble chart of the microbes in this volunteer's samples
-function drawBubbleChart(item) {
+function drawBubbleChart(sample) {
 
-    console.log("Bubble chart for: " + item);
+    console.log("Bubble chart for: " + sample);
   
-    var bubbleDiv = document.querySelector("#bubble");
-  
+    var bubbleDiv = document.getElementById("bubble")
+
+    console.log("Bubble div: " + bubbleDiv);
+
+
+    let sampleData = {};
+
+    sampleData = samples.find(function(sample) {
+
+        for (let i = 0; i < samples.length; i++) {
+          return samples[i].id === sample.id;
+        };
+    });
+
+    console.log("Bubble sample " + sampleData.otu_ids);
+
+
     // Define plot data and layout
-    var bubble_data = [{
-      x: [1, 2, 3, 4],
-      y: [10, 15, 13, 17],
-      type: 'bubble'
+    var bubbleData = [{
+      x: sampleData.otu_ids,
+      y: sampleData.sample_values,
+      type: 'bubble',
+      mode: 'markers',
+      marker: {
+        size: sampleData.sample_values,
+        color: sampleData.otu_ids
+      }
     }];
   
     var layout = {
-      title: 'Bubble Plot',
-      xaxis: { title: 'X-axis' },
-      yaxis: { title: 'Y-axis' }
+      title: 'Microbes',
+      xaxis: { title: 'OTUs' },
+      yaxis: { title: 'Number of Microbes' }
     };
   
     // Create the plot using Plotly.js
-    Plotly.newPlot(bubbleDiv, bubble_data, layout);
+    Plotly.newPlot(bubbleDiv, bubbleData, layout);
   
   };
 
@@ -242,28 +241,121 @@ function getWashings(item) {
 
     var washingDiv = document.getElementById("gauge");
 
+    console.log("washings div: " + washingDiv);
+
     var numWashings = item.wfreq;
 
+    console.log("num washings: " + numWashings);
+
+    if (numWashings == null) {
+        numWashings = 0};
+
+    var gauge_data = [
+        {
+          type: "indicator",
+      
+          mode: "gauge+number+delta",
+      
+          value: numWashings,
+      
+          title: { text: "Belly Button Washing Frequency <br><sub>Scrubs Per Week</sub>", font: { size: 18 } },  
+      
+          delta: { reference: 7, increasing: { color: "RebeccaPurple" } },
+      
+          gauge: {
+      
+            axis: { range: [0, 9], tickwidth: 1, tickcolor: "darkblue" },
+            bar: { color: "darkblue" },
+            bgcolor: "white",
+            borderwidth: 2,
+            bordercolor: "grey",
+      
+            steps: [
+              { range: [0, 1], color: "crimson" },
+              { range: [1, 2], color: "red"},
+              { range: [2, 3], color: "darkorange" },
+              { range: [3, 4], color: "lightpink" },
+              { range: [4, 5], color: "linen" },
+              { range: [5, 6], color: "lightcyan" },
+              { range: [6, 7], color: "greenyellow" },
+              { range: [7, 8], color: "lightgreen" },
+              { range: [8, 9], color: "limegreen" }
+            ],
+      
+            threshold: {
+              line: { color: "red", width: 4 },
+              thickness: 0.75,
+              value: 7
+            }
+          }
+        }
+      ];
+      
+      console.log(gauge_data.steps);
+
+      var layout = {
+        width: 400,
+        height: 350,
+        margin: { t: 25, r: 25, l: 25, b: 25 },
+        paper_bgcolor: "white",
+        font: { color: "darkblue", family: "Arial" }
+      };
+      
+      Plotly.newPlot(washingDiv, gauge_data, layout);
 };
 
 // initialize the drop down list with the list of ids from the json and display
 // data in each panel for a default initial choice of id
 function init() {
-      
+
+    // Fetch the JSON data and log it
+
+    d3.json(url).then(function(data) {
+      console.log(data);
+
+      names = data.names;
+      volunteers = data.metadata;
+      samples = data.samples;
+      fieldnames = Object.keys(volunteers[0]);
+      console.log("Volunteer ids: " + names);
+      // console.log(names.length);
+      // console.log(volunteers[0]["ethnicity"]);
+      // console.log(fieldnames);
+      console.log("getting data for volunter 3: " + volunteers[2]);
+
+      // Access the dropdown menu element
+      var dropdownMenu = document.getElementById("selDataset");
+
+      let sample = defaultID;
+
+      // Create the options for the dropdown menu
+      for (let i = 0; i < names.length; i++) {
+    
+        sample = names[i];
+
+        option = document.createElement("option");
+        option.value = sample;
+        option.text = sample;
+        dropdownMenu.appendChild(option);
+      };
+    
       defaultItem = volunteers.find(function(volunteer) {
         console.log("in find default id is: " + defaultID);
         console.log("volunteers: " + volunteers);
         return volunteer.id == defaultID;
       });
 
-      console.log ("Default item is: " + defaultItem.id);
-
+      if (defaultItem !== null) {
+        console.log ("Default item is: " + defaultItem.id);
+      };
+    
       // update all of the plots and charts
       updateMetrics(defaultItem);
       getTopTen(defaultItem);
-      drawBubbleChart(defaultID);
       getWashings(defaultItem);
+      drawBubbleChart(defaultID);
 
+    });
 };
 
 // This function is called when a dropdown menu item is selected
@@ -288,7 +380,6 @@ function optionChanged(newID) {
     updatePlotly(newItem);
 };
 
-
 // Update the plots for the new data item
 function updatePlotly(newVolunteer) {
 
@@ -301,9 +392,6 @@ function updatePlotly(newVolunteer) {
   // Plotly.restyle("bar", "values", [newdata]);
 };
 
-
-// On change to the DOM, call getNewData()
-// d3.selectAll("#selDataset").on("change", optionChanged(newID));
 
 init();
 
