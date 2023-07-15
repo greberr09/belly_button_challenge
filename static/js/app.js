@@ -95,7 +95,6 @@ function updateMetrics(item) {
     metricsPanel.appendChild(table);
     table.appendChild(thead);
     table.appendChild(tbody);
-
 };
 
 // function to display a bar graph of the top ten most prevalent microbes for this volunteer 
@@ -109,14 +108,10 @@ function getTopTen(item) {
 
     var microbeDiv = document.getElementById("bar");
 
-    // console.log("div: " + microbeDiv);
-    console.log("samples: " + samples[0].otu_ids);
-
     sampleData = samples.find(function(item) {
 
         for (let i = 0; i < samples.length; i++) {
-      
-          return samples[i].id === item.id;
+          return samples[i].id == item.id;
         };
     });
 
@@ -135,14 +130,14 @@ function getTopTen(item) {
     var microbeData = [{
         x: top_ten_values,
         y: top_ten_otus,
-        mode:  'markers',
+        // mode:  'markers',
         type: 'bar',
         orientation: 'h',
         width: 225,
-        text: top_ten_labels
+        text: top_ten_labels,
         // marker: {
-        //  color: 'blue',
-        // width: 500
+          // color: 'blue',
+          // width: 200
         //}
     }];
 
@@ -168,7 +163,7 @@ function getTopTen(item) {
       },
       yaxis: {
         title: {
-          text: 'OTU',
+          text: 'OTU ID',
           font: {
             size: 14,
             weight: 'bold'
@@ -186,46 +181,43 @@ function getTopTen(item) {
     // Create the plot using Plotly.js
     Plotly.newPlot(microbeDiv, microbeData, layout);
 
-    
 };
   
 // function to draw a bubble chart of the microbes in this volunteer's samples
-function drawBubbleChart(sample) {
+function drawBubbleChart(itemSelected) {
 
-    console.log("Bubble chart for: " + sample);
+    console.log("Bubble chart for: " + itemSelected.id);
   
-    var bubbleDiv = document.getElementById("bubble")
-
-    console.log("Bubble div: " + bubbleDiv);
-
+    var bubbleDiv = document.getElementById("bubble");
 
     let sampleData = {};
 
-    sampleData = samples.find(function(sample) {
+    sampleData = samples.find(function(itemSelected) {
 
         for (let i = 0; i < samples.length; i++) {
-          return samples[i].id === sample.id;
+          return samples[i].id == itemSelected.id;
         };
     });
 
     console.log("Bubble sample " + sampleData.otu_ids);
 
-
     // Define plot data and layout
     var bubbleData = [{
       x: sampleData.otu_ids,
       y: sampleData.sample_values,
+      text: sampleData.otu_labels,
       type: 'bubble',
       mode: 'markers',
       marker: {
         size: sampleData.sample_values,
-        color: sampleData.otu_ids
+        color: sampleData.otu_ids,
+        colorscale: 'Viridis'
       }
     }];
   
     var layout = {
-      title: 'Microbes',
-      xaxis: { title: 'OTUs' },
+      title: 'Microbes per Sample',
+      xaxis: { title: 'OTU ID' },
       yaxis: { title: 'Number of Microbes' }
     };
   
@@ -237,14 +229,11 @@ function drawBubbleChart(sample) {
 // bonus function to display a gauge of the times per week this volunteer scrubs the belly button
 function getWashings(item) {
 
-    console.log("get washings for: " + item);
+    console.log("get washings for: " + item.id);
 
     var washingDiv = document.getElementById("gauge");
 
-    console.log("washings div: " + washingDiv);
-
     var numWashings = item.wfreq;
-
     console.log("num washings: " + numWashings);
 
     if (numWashings == null) {
@@ -290,8 +279,6 @@ function getWashings(item) {
           }
         }
       ];
-      
-      console.log(gauge_data.steps);
 
       var layout = {
         width: 400,
@@ -317,11 +304,13 @@ function init() {
       volunteers = data.metadata;
       samples = data.samples;
       fieldnames = Object.keys(volunteers[0]);
+      samplenames = Object.keys(samples[0]);
       console.log("Volunteer ids: " + names);
       // console.log(names.length);
       // console.log(volunteers[0]["ethnicity"]);
-      // console.log(fieldnames);
-      console.log("getting data for volunter 3: " + volunteers[2]);
+      console.log(fieldnames);
+      console.log(samplenames);
+      console.log("getting data for volunter 3: " + samples[2].otu_ids);
 
       // Access the dropdown menu element
       var dropdownMenu = document.getElementById("selDataset");
@@ -330,7 +319,7 @@ function init() {
 
       // Create the options for the dropdown menu
       for (let i = 0; i < names.length; i++) {
-    
+
         sample = names[i];
 
         option = document.createElement("option");
@@ -339,22 +328,21 @@ function init() {
         dropdownMenu.appendChild(option);
       };
     
-      defaultItem = volunteers.find(function(volunteer) {
+      defaultItem = volunteers.find(function(defaultID) {
         console.log("in find default id is: " + defaultID);
-        console.log("volunteers: " + volunteers);
-        return volunteer.id == defaultID;
+        return volunteers.id == defaultID;
       });
 
       if (defaultItem !== null) {
-        console.log ("Default item is: " + defaultItem.id);
-      };
-    
-      // update all of the plots and charts
-      updateMetrics(defaultItem);
-      getTopTen(defaultItem);
-      getWashings(defaultItem);
-      drawBubbleChart(defaultID);
+          console.log ("Default item is: " + defaultItem.id);
 
+          // update all of the plots and charts
+          updateMetrics(defaultItem);
+          getTopTen(defaultItem);
+          getWashings(defaultItem);
+          drawBubbleChart(defaultItem);
+      }
+      else {console.log("item not found")};
     });
 };
 
@@ -362,22 +350,19 @@ function init() {
 function optionChanged(newID) {
 
     console.log("Getting new data");
-
-    // let dropdownMenu = d3.select("#selDataset");
-
-    // Assign the value of the dropdown menu option to a letiable
-    //let newID = dropdownMenu.property("value");
-
     console.log("New id is: " + newID);
 
-    newItem = volunteers.find(function(volunteer) {
-        return volunteer.id == newID;
+    newItem = volunteers.find(function(newID) {
+        return volunteers.id == newID;
     });
 
-    console.log("New item is: " + newItem.ethnicity);
+    if (newItem != null) {
+        console.log("New item is: " + newItem.ethnicity);
 
-    // Call function to update the charts and graphs
-    updatePlotly(newItem);
+        // Call function to update the charts and graphs
+        updatePlotly(newItem);
+      }  
+      else {console.log("item not found")};
 };
 
 // Update the plots for the new data item
@@ -386,7 +371,7 @@ function updatePlotly(newVolunteer) {
      // update all of the plots and charts
     updateMetrics(newVolunteer);
     getTopTen(newVolunteer);
-    drawBubbleChart(newVolunteer.id);
+    drawBubbleChart(newVolunteer);
     getWashings(newVolunteer);
 
   // Plotly.restyle("bar", "values", [newdata]);
