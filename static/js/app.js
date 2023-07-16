@@ -108,7 +108,7 @@ function getTopTen(item) {
 
     var microbeDiv = document.getElementById("bar");
 
-    sampleData = samples.find(function(item) {
+    sampleData = samples.find(function(thisItem) {
 
         for (let i = 0; i < samples.length; i++) {
           return samples[i].id == item.id;
@@ -117,32 +117,39 @@ function getTopTen(item) {
 
     console.log("sample data: " + sampleData.otu_ids);
 
-    // This is taking advantage of the fact that the data is already sorted
+    // reverse the data to be in descending number of microbes
     top_ten_otus = sampleData.otu_ids.slice(0, 10);
+    top_ten_otus.reverse();
     top_ten_values = sampleData.sample_values.slice(0, 10); 
+    top_ten_values.reverse();
     top_ten_labels = sampleData.otu_labels.slice(0, 10);
+    top_ten_labels.reverse();
+
 
     console.log("top ten otus: " + top_ten_otus);
     console.log("top ten data: " + top_ten_values);
     console.log("top ten microbes: " + top_ten_labels);
 
+    let hvrtxt = top_ten_otus + "<hr>" + top_ten_labels;
+
     // Define plot data and layout
     var microbeData = [{
         x: top_ten_values,
-        y: top_ten_otus,
-        // mode:  'markers',
         type: 'bar',
         orientation: 'h',
-        width: 225,
-        text: top_ten_labels,
-        // marker: {
-          // color: 'blue',
-          // width: 200
-        //}
+        // width: 50,
+        text: top_ten_labels
     }];
 
     var layout = {
-        title: {
+      //margin: {
+        //l: 20, 
+        //r: 10,
+        //t: 0,
+       // b: 0 
+     // }, 
+
+      title: {
           text: 'Top Ten Most Prevalent Microbes',
           font: {
             size: 18,
@@ -163,17 +170,17 @@ function getTopTen(item) {
       },
       yaxis: {
         title: {
-          text: 'OTU ID',
+          text: 'OTU IDs',
           font: {
             size: 14,
             weight: 'bold'
-          }
+          },
         },
-        // categoryorder: 'array',
-        // tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-       // ticktext: top_ten_otus,
+        ticktext: top_ten_otus,
+        tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
           tickfont: {
-            size: 12
+            size: 12,
+            color: "grey"
           }
       }
     };
@@ -184,19 +191,22 @@ function getTopTen(item) {
 };
   
 // function to draw a bubble chart of the microbes in this volunteer's samples
-function drawBubbleChart(itemSelected) {
+function drawBubbleChart(item) {
 
-    console.log("Bubble chart for: " + itemSelected.id);
+    console.log("Bubble chart for: " + item.id);
   
     var bubbleDiv = document.getElementById("bubble");
 
     let sampleData = {};
 
-    sampleData = samples.find(function(itemSelected) {
+    sampleData = samples.find(function(sampleItem) {
 
-        for (let i = 0; i < samples.length; i++) {
-          return samples[i].id == itemSelected.id;
-        };
+        console.log("in find sample item: " + sampleItem);
+        return sampleItem.id == item.id;
+
+        // for (let i = 0; i < samples.length; i++) {
+          // return samples[i].id == item.id;
+        //};
     });
 
     console.log("Bubble sample " + sampleData.otu_ids);
@@ -310,7 +320,7 @@ function init() {
       // console.log(volunteers[0]["ethnicity"]);
       console.log(fieldnames);
       console.log(samplenames);
-      console.log("getting data for volunter 3: " + samples[2].otu_ids);
+      console.log("getting sample data for volunter 3: " + samples[2].otu_ids);
 
       // Access the dropdown menu element
       var dropdownMenu = document.getElementById("selDataset");
@@ -328,12 +338,12 @@ function init() {
         dropdownMenu.appendChild(option);
       };
     
-      defaultItem = volunteers.find(function(defaultID) {
+      defaultItem = volunteers.find(function(volunteer) {
         console.log("in find default id is: " + defaultID);
-        return volunteers.id == defaultID;
+        return volunteer.id == defaultID;
       });
 
-      if (defaultItem !== null) {
+      if (defaultItem) {
           console.log ("Default item is: " + defaultItem.id);
 
           // update all of the plots and charts
@@ -352,11 +362,11 @@ function optionChanged(newID) {
     console.log("Getting new data");
     console.log("New id is: " + newID);
 
-    newItem = volunteers.find(function(newID) {
-        return volunteers.id == newID;
+    newItem = volunteers.find(function(newVolunteer) {
+        return newVolunteer.id == newID;
     });
 
-    if (newItem != null) {
+    if (newItem) {
         console.log("New item is: " + newItem.ethnicity);
 
         // Call function to update the charts and graphs
