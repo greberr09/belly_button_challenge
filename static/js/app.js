@@ -31,18 +31,20 @@ let volunteers = [];
 // the sample data taken from each volunteer
 let samples = [];
 
-
 // function to display a table of the demograpic data about the selected volunteer
 function updateMetrics(item) {
 
     console.log("update Metrics for: " + item.id);
 
     metricsPanel = document.querySelector(".panel-body");
-    var container = document.getElementById("your-div-id");
     metricsPanel.innerHTML = "";
 
-    // Create the table structure
+    // Create the table structure and remove any old data
     var table = document.createElement("table");
+    //table.style.tableLayout = "fixed";
+    table.style.tableLayout = "auto"
+    table.style.width = '100%';
+    //table.width = '100%';
     table.innerHTML = "";
 
     var thead = document.createElement("thead");
@@ -65,6 +67,7 @@ function updateMetrics(item) {
   
     // Iterate over the sample item and create table rows
     for (var index in item) {
+
         value = item[index];
 
         // Create a table row
@@ -73,15 +76,37 @@ function updateMetrics(item) {
         // Create table data for metric
         indexData = document.createElement("td");
         indexData.textContent = index;
+        indexData.style.width = "auto";
+        //indexData.width = 50;
         indexData.style.paddingRight = "12px"; 
-        indexData.style.fontSize = "13px";
+        indexData.style.fontSize = "11px";
+
 
         // Create table data for value of metric
         valueData = document.createElement("td");
-        valueData.textContent = value;
-        valueData.style.paddingRight = "50px";
+        valueData.style.maxWidth = "200px";
+        valueData.style.fontWeight = 'bold';
         valueData.style.whiteSpace = "nowrap";
-        valueData.style.fontSize = "13px";
+        valueData.style.fontSize = "11px";
+        valueData.style.width = "auto";
+        valueData.style.overflow = "hidden";
+        valueData.style.textOverflow = "ellipsis";
+        valueData.style.wordWrap = "break-word";
+        // valueData.style.wordBreak = "break-all";
+
+        var div = document.createElement("div");
+        div.style.maxWidth = "200px";
+        div.id = "topTenDiv";
+        div.style.display = "inline-block"; 
+        div.style.whiteSpace = "nowrap";
+        div.style.overflow = "hidden";
+        div.style.textOverflow = "ellipsis";
+
+        // Add content to the div
+        div.textContent = value;
+
+        // Append the div to the table cell
+        valueData.appendChild(div);
 
         // Append the table data to the row
         row.appendChild(indexData);
@@ -99,8 +124,8 @@ function updateMetrics(item) {
 
 // function to display a bar graph of the top ten most prevalent microbes for this volunteer 
 function getTopTen(item) {
-
-    console.log("Get top ten for: " + item.id);
+  console.log("ttop ten: " + item.id);
+    
     let sampleData = {};
     let top_ten_otus = [];
     let top_ten_values = [];
@@ -108,11 +133,10 @@ function getTopTen(item) {
 
     var microbeDiv = document.getElementById("bar");
 
-    sampleData = samples.find(function(thisItem) {
+    sampleData = samples.find(function(sampleItem) {
 
-        for (let i = 0; i < samples.length; i++) {
-          return samples[i].id == item.id;
-        };
+          console.log("Finding sample data for: " + sampleItem.id);
+          return sampleItem.id == item.id;
     });
 
     console.log("sample data: " + sampleData.otu_ids);
@@ -125,30 +149,20 @@ function getTopTen(item) {
     top_ten_labels = sampleData.otu_labels.slice(0, 10);
     top_ten_labels.reverse();
 
-
+    // print results to the console
     console.log("top ten otus: " + top_ten_otus);
     console.log("top ten data: " + top_ten_values);
     console.log("top ten microbes: " + top_ten_labels);
-
-    let hvrtxt = top_ten_otus + "<hr>" + top_ten_labels;
 
     // Define plot data and layout
     var microbeData = [{
         x: top_ten_values,
         type: 'bar',
         orientation: 'h',
-        // width: 50,
         text: top_ten_labels
     }];
 
     var layout = {
-      //margin: {
-        //l: 20, 
-        //r: 10,
-        //t: 0,
-       // b: 0 
-     // }, 
-
       title: {
           text: 'Top Ten Most Prevalent Microbes',
           font: {
@@ -174,18 +188,17 @@ function getTopTen(item) {
           font: {
             size: 14,
             weight: 'bold'
-          },
+          }
         },
         ticktext: top_ten_otus,
         tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
           tickfont: {
-            size: 12,
-            color: "grey"
+            size: 12
           }
       }
     };
   
-    // Create the plot using Plotly.js
+    // Create the plot using Plotly
     Plotly.newPlot(microbeDiv, microbeData, layout);
 
 };
@@ -201,17 +214,17 @@ function drawBubbleChart(item) {
 
     sampleData = samples.find(function(sampleItem) {
 
-        console.log("in find sample item: " + sampleItem);
+        console.log("finding sample data for " + sampleItem.id);
         return sampleItem.id == item.id;
-
-        // for (let i = 0; i < samples.length; i++) {
-          // return samples[i].id == item.id;
-        //};
     });
 
-    console.log("Bubble sample " + sampleData.otu_ids);
+    console.log("Bubble sample otus: " + sampleData.otu_ids);
 
     // Define plot data and layout
+    // Set sizemode to area of plot rather than diameter to handle small sample sizes
+    // Set sizeref to value as small as possible so that bubbles are not 
+    // too big for sample sizes of ten but are visible for sample sizes of 3 and 4
+  
     var bubbleData = [{
       x: sampleData.otu_ids,
       y: sampleData.sample_values,
@@ -221,7 +234,9 @@ function drawBubbleChart(item) {
       marker: {
         size: sampleData.sample_values,
         color: sampleData.otu_ids,
-        colorscale: 'Viridis'
+        colorscale: 'Viridis',
+        sizemode: 'area',  
+        sizeref: 0.05   
       }
     }];
   
@@ -231,7 +246,7 @@ function drawBubbleChart(item) {
       yaxis: { title: 'Number of Microbes' }
     };
   
-    // Create the plot using Plotly.js
+    // Create the plot using Plotly
     Plotly.newPlot(bubbleDiv, bubbleData, layout);
   
   };
@@ -252,9 +267,7 @@ function getWashings(item) {
     var gauge_data = [
         {
           type: "indicator",
-      
-          mode: "gauge+number+delta",
-      
+          mode: "gauge+number+delta", 
           value: numWashings,
       
           title: { text: "Belly Button Washing Frequency <br><sub>Scrubs Per Week</sub>", font: { size: 18 } },  
@@ -262,7 +275,6 @@ function getWashings(item) {
           delta: { reference: 7, increasing: { color: "RebeccaPurple" } },
       
           gauge: {
-      
             axis: { range: [0, 9], tickwidth: 1, tickcolor: "darkblue" },
             bar: { color: "darkblue" },
             bgcolor: "white",
@@ -291,8 +303,8 @@ function getWashings(item) {
       ];
 
       var layout = {
-        width: 400,
-        height: 350,
+        //width: 400,
+        //height: 350,
         margin: { t: 25, r: 25, l: 25, b: 25 },
         paper_bgcolor: "white",
         font: { color: "darkblue", family: "Arial" }
@@ -315,9 +327,9 @@ function init() {
       samples = data.samples;
       fieldnames = Object.keys(volunteers[0]);
       samplenames = Object.keys(samples[0]);
+
       console.log("Volunteer ids: " + names);
-      // console.log(names.length);
-      // console.log(volunteers[0]["ethnicity"]);
+  
       console.log(fieldnames);
       console.log(samplenames);
       console.log("getting sample data for volunter 3: " + samples[2].otu_ids);
@@ -367,7 +379,7 @@ function optionChanged(newID) {
     });
 
     if (newItem) {
-        console.log("New item is: " + newItem.ethnicity);
+        console.log("New item is: " + newItem.id);
 
         // Call function to update the charts and graphs
         updatePlotly(newItem);
