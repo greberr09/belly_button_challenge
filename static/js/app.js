@@ -41,10 +41,11 @@ function updateMetrics(item) {
 
     // Create the table structure and remove any old data
     var table = document.createElement("table");
-    //table.style.tableLayout = "fixed";
-    table.style.tableLayout = "auto"
-    table.style.width = '100%';
-    //table.width = '100%';
+
+    // the "fixed" attribute rather than auto has to be used to allow 
+    // the ellipsis where a cell's data is very long
+    table.style.tableLayout = "fixed";
+    table.width = 140;
     table.innerHTML = "";
 
     var thead = document.createElement("thead");
@@ -69,6 +70,7 @@ function updateMetrics(item) {
     for (var index in item) {
 
         value = item[index];
+        console.log("metadata: " + value);
 
         // Create a table row
         row = document.createElement("tr");
@@ -76,33 +78,29 @@ function updateMetrics(item) {
         // Create table data for metric
         indexData = document.createElement("td");
         indexData.textContent = index;
-        indexData.style.width = "auto";
-        //indexData.width = 50;
-        indexData.style.paddingRight = "12px"; 
-        indexData.style.fontSize = "11px";
-
+        indexData.width = 9;
+        indexData.style.fontSize = "12px";
 
         // Create table data for value of metric
         valueData = document.createElement("td");
-        valueData.style.maxWidth = "200px";
+        valueData.style.width = 120;
         valueData.style.fontWeight = 'bold';
         valueData.style.whiteSpace = "nowrap";
-        valueData.style.fontSize = "11px";
-        valueData.style.width = "auto";
+        valueData.style.fontSize = "12px";
         valueData.style.overflow = "hidden";
-        valueData.style.textOverflow = "ellipsis";
-        valueData.style.wordWrap = "break-word";
-        // valueData.style.wordBreak = "break-all";
+        
+        // a div has to be created inside the cell because
+        // the ellipsis and hidden attributes work on divs not cells.
 
         var div = document.createElement("div");
-        div.style.maxWidth = "200px";
         div.id = "topTenDiv";
+        div.style.maxWidth = "100%";
         div.style.display = "inline-block"; 
         div.style.whiteSpace = "nowrap";
         div.style.overflow = "hidden";
         div.style.textOverflow = "ellipsis";
 
-        // Add content to the div
+        // Add the value for this metric to the div
         div.textContent = value;
 
         // Append the div to the table cell
