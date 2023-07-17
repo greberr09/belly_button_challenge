@@ -39,6 +39,21 @@ let volunteers = [];
 // the sample data taken from each volunteer
 let samples = [];
 
+function getSampleData(item, sampleList) {
+
+  sampleData = sampleList.find(function(sampleItem) {
+
+    console.log("Finding sample data for: " + item.id);
+    return sampleItem.id == item.id; 
+  });
+
+  if (sampleData) {
+    console.log("sample data: " + sampleData.sample_values);}
+    else { console.log ("No sample data found")};
+
+  return sampleData;
+};
+
 // function to display a table of the demograpic data about the selected volunteer
 function updateMetrics(item) {
 
@@ -78,7 +93,6 @@ function updateMetrics(item) {
     for (var index in item) {
 
         value = item[index];
-        console.log("metadata: " + value);
 
         // Create a table row
         row = document.createElement("tr");
@@ -97,8 +111,21 @@ function updateMetrics(item) {
         valueData.style.fontSize = "12px";
         valueData.style.overflow = "hidden";
         
-        // a div has to be created inside the cell because
-        // the ellipsis and hidden attributes work on divs not cells.
+        // A div has to be created inside the cell because
+        // the ellipsis and hidden attributes work as needed on divs not cells.
+        // Using a div within the cell and the use of "inline-block", 
+        // "nowrap", "hidden", and "ellipsis" to handle very long 
+        // text elements are a combination of extensive research on stackOverflow, 
+        // Chatgpt, and some njavascript training cites aimed at people building 
+        // their own websites, such as css visual dictionary.  While these 
+        // attributes can be applied at the cell level without error, as these
+        // sources discuss, and demonstrated during development, that will not produce 
+        // the desired resulte.   MaxWidth also has to be set to 100% in the div
+        // in order for the ellipsis to work, otherwise the "hidden" attribute will 
+        // cut off the excess text but the ellipsis will not display to indicate 
+        // the extra text.   The word=break and break-all attributes do not recognize 
+        // forward slashes as a break or wrap character, so ellipsis was used rather than 
+        // having the long line break for those few ids were either ethnicity or location overflow.
 
         var div = document.createElement("div");
         div.id = "topTenDiv";
@@ -122,7 +149,7 @@ function updateMetrics(item) {
         tbody.appendChild(row);
     };
 
-    // Append the table components to the containing panel element
+    // Append the table components to the panel element
     metricsPanel.appendChild(table);
     table.appendChild(thead);
     table.appendChild(tbody);
@@ -132,28 +159,27 @@ function updateMetrics(item) {
 function getTopTen(item) {
   console.log("ttop ten: " + item.id);
     
-    let sampleData = {};
+    let sdata = {};
     let top_ten_otus = [];
     let top_ten_values = [];
     let top_ten_labels = [];
 
     var microbeDiv = document.getElementById("bar");
 
-    sampleData = samples.find(function(sampleItem) {
+    // get the sample values for this item id
+    sdata = getSampleData(item, samples);
 
-          console.log("Finding sample data for: " + sampleItem.id);
-          return sampleItem.id == item.id;
-    });
-
-    console.log("sample data: " + sampleData.otu_ids);
-
-    // reverse the data to be in descending number of microbes
-    top_ten_otus = sampleData.otu_ids.slice(0, 10);
-    top_ten_otus.reverse();
-    top_ten_values = sampleData.sample_values.slice(0, 10); 
-    top_ten_values.reverse();
-    top_ten_labels = sampleData.otu_labels.slice(0, 10);
-    top_ten_labels.reverse();
+    // Reverse the sample data to be in descending number of microbes.
+    // This makes use of the fact that the original study data are
+    // entered in the samples array already ordered.
+    if (sdata) {
+      top_ten_otus = sdata.otu_ids.slice(0, 10);
+      top_ten_otus.reverse();
+      top_ten_values = sdata.sample_values.slice(0, 10); 
+      top_ten_values.reverse();
+      top_ten_labels = sdata.otu_labels.slice(0, 10);
+      top_ten_labels.reverse();
+    }
 
     // print results to the console
     console.log("top ten otus: " + top_ten_otus);
@@ -218,20 +244,18 @@ function drawBubbleChart(item) {
 
     let sampleData = {};
 
-    sampleData = samples.find(function(sampleItem) {
-
-        console.log("finding sample data for " + sampleItem.id);
-        return sampleItem.id == item.id;
-    });
-
-    console.log("Bubble sample otus: " + sampleData.otu_ids);
+    // get the sample values for this item id
+    sampleData = getSampleData(item, samples);
 
     // Define plot data and layout
     // Set sizemode to area of plot rather than diameter to handle small sample sizes
     // Set sizeref to value as small as possible so that bubbles are not 
     // too big for sample sizes of ten but are visible for sample sizes of 3 and 4
   
-    var bubbleData = [{
+    var bubbleData = [];
+
+    if (sampleData) {
+      bubbleData = [{
       x: sampleData.otu_ids,
       y: sampleData.sample_values,
       text: sampleData.otu_labels,
@@ -243,9 +267,10 @@ function drawBubbleChart(item) {
         colorscale: 'Viridis',
         sizemode: 'area',  
         sizeref: 0.05   
-      }
-    }];
-  
+        }
+      }];
+  };
+
     var layout = {
       title: 'Microbes per Sample',
       xaxis: { title: 'OTU ID' },
