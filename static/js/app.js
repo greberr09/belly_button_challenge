@@ -1,8 +1,16 @@
 
-// let australia = Object.values(data.australia);
-
-//   backtick char for fstring 
-// "id": 940, "ethnicity": "Caucasian", "gender": "F", "age": 24.0, "location": "Beaufort/NC", "bbtype": "I", "wfreq": 2.0},
+// Application to allow a user to explore data about the various microbes in the
+// human belly button, based on data from the North Carolina State Public Science Lab,
+// see http://robdunnlab.com/projects/belly-button-biodiversity/ for more information.
+//
+// This application allows a user to select a volunteer study participant from a drop-down
+// list of volunteer ids.  It then displays demographic data about that participant,
+// a gauge of the participant's weekly washing of the participant's belly button, a
+// bar chart showing the top ten microbes found in the samples taken, and a bubble
+// chart showing the microbes for all samples taken from that participant.  The study participants are 
+// identified by id number, and, in most cases, city and state, but no personally
+// identifiying information is accessible.  A dataset from this study is publically available at
+// "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json".
 
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
 
