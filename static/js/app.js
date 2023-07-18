@@ -16,28 +16,10 @@ const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/
 
 // the default volunteer for the initial display of all plots
 const defaultID = 940;
-let defaultItem = {};
-
-// the changed ID that is returned from the html on change of selection
-let newID = defaultID;
 
 // Promise Pending
 const dataPromise = d3.json(url);
 console.log("Data Promise: ", dataPromise);
-
-// define arrays to hold data optained from the json
-
-// the sets of demographic fields available about each volunter
-let fieldnames = [];
-
-// the list of volunter ids
-let names = [];
-
-// the demographic data about each volunteer
-let volunteers = [];
-
-// the sample data taken from each volunteer
-let samples = [];
 
 function getSampleData(item, sampleList) {
 
@@ -59,31 +41,31 @@ function updateMetrics(item) {
 
     console.log("update Metrics for: " + item.id);
 
-    //get panel where the table will be built and be
+    // get panel where the table will be built and be
     // sure it is emptied of any rows from a prior id
+
+    let panelBody = d3.select(".panel-body");
+    panelBody.html("");
 
     // the "fixed" attribute rather than auto has to be used 
     // to allow the ellipsis where a cell's data is very long
 
-    let table = d3.select(".panel-body")
-      .append("table")
-      .style("tableLayout", "fixed")
-      .style("width", 140);
-    table.innerHTML = "";
+    let table = panelBody.append("table")
+      .style("tableLayout", "auto")
+      //.style("width", "130px");
 
-    let thead = d3.create("thead");
-    thead.innerHTML = "";
+    let thead = table.append("thead");
 
-    let tbody = d3.create("tbody");
-    tbody.innerHTML = "";
+    let tbody = table.append("tbody");
   
     // Create the header row
     let headerRow = thead.append("tr");
 
-    let hCell1 = headerRow.append('th')
-      .text('Metric');
-    let hCell2 = headerRow.append('th')
-      .text('Value');
+    headerRow.append("th")
+      .text("Metric");
+
+    headerRow.append("th")
+     .text("Value");
 
     // Iterate over the sample item and create table rows
     for (var index in item) {
@@ -91,21 +73,26 @@ function updateMetrics(item) {
         value = item[index];
 
         // Create a table row
-        let row = d3.create("tr");
+        let row = tbody.append("tr");
 
         // Create table data for metric
-        let indexData = d3.create("td")
-          .text(index)
-          .style("width", "9")
-          .style("fontSize", "12px");
-
-        // Create table data for value of metric
-        let valueData = d3.create("td")
-          .style("width", "120px")
-          .style("font-weight", "bold")
-          .style("white-space", "nowrap")
+        let indexData = row.append("td")
+          //.style("width", "10")
           .style("font-size", "12px")
-          .style("overflow", "hidden");
+          .style("paddingRight", "24px");
+
+        let div1 = indexData.append("div")
+          //.style("max-width", "100%")
+          //.style("display", "inline-block")
+          .style("white-space", "normal")
+          .style("word-wrap", "break-word")
+          .style("overflow-wrap", "break-word")
+          //.style("overflow", "hidden")
+          //.style("text-overflow", "ellipsis")
+          .text(index);
+
+          
+        // Create table data for value of metric
         
         // A div has to be created inside the cell because
         // the ellipsis and hidden attributes work as needed on divs not cells.
@@ -124,30 +111,60 @@ function updateMetrics(item) {
         // having the long line break for those few ids were either ethnicity or location overflow.
 
         // Set div attributes and add the value for this metric to the div
-        let div = d3.create("div")
-          .attr("id", "topTenDiv")
-          .style("maxWidth", "100%")
-          .style("display", "inline-block")
-          .style("whiteSpace",  "nowrap")
-          .style("overflow", "hidden")
-          .style("textOverflow", "ellipsis")
-          .text(value);
-
         // Append the div to the table cell
-        valueData.append(div);
+
+        let valueData = row.append("td")
+            .style("font-size", "12px")
+            .style("width", "156px")
+            .style("white-space", "nowrap");
+
+        // Create a div within valueData to hold the text
+        let div = valueData.append("div")
+           .style("font-weight", "bold")
+           .style("max-width", "100%")
+           .style("display", "block") // Use block display to create a new line
+           .style("white-space", "pre-wrap") // Use pre-wrap for word wrap and line breaks
+           .style("overflow-wrap", "break-word")
+           .style("max-height", "2.4em") // Adjust the height to accommodate two lines
+           .style("overflow", "hidden");
+
+           
+        if (index == "ethnicity" || index == "Location") {
+          console.log("value " + value + " " + value.length);
+          if (value.length <= 13) {
+            div.text = value;
+          }
+          else {
+            let lines = String(value).split("/");
+            newVal = "lines[0] " + "/" + "<br>" + text(lines[1]);
+            div.text = newVal;
+            //div.append("span").text(lines[0] + "/");
+            //div.append("span").text(lines[1]);
+          };
+        };
+
+               //.style("white-space", "nowrap")
+          //.style("overflow", "hidden")
+          //.style("text-overflow", "ellipsis")
 
         // Append the table data to the row
-        row.appendChild(indexData);
-        row.appendChild(valueData);
+        //row.appendChild(indexData);
+        //row.appendChild(valueData);
+
+
+        // Append the table data to the row
+        row.append(() => indexData.node());
+        row.append(() => valueData.node());
 
         // Append the row to the table body
-        tbody.appendChild(row);
+        //tbody.append(() => row.node());
     };
 
     // Append the table components to the panel element
-    metricsPanel.appendChild(table);
-    table.appendChild(thead);
-    table.appendChild(tbody);
+
+    // table.append(() => thead.node());
+    //table.append(() => tbody.node());
+
 };
 
 // function to display a bar graph of the top ten most prevalent microbes for this volunteer 
@@ -319,8 +336,6 @@ function getWashings(item) {
       ];
 
       var layout = {
-        //width: 400,
-        //height: 350,
         margin: { t: 25, r: 25, l: 25, b: 25 },
         paper_bgcolor: "white",
         font: { color: "darkblue", family: "Arial" }
@@ -354,6 +369,15 @@ function buildDropdown(names) {
   });
 };
 
+function updatePlotly(newVolunteer, newSample) {
+
+    // Update the tables, gauges, and plots for a new data item
+    updateMetrics(newVolunteer);
+    getTopTen(newVolunteer, newSample);
+    drawBubbleChart(newVolunteer, newSample);
+    getWashings(newVolunteer);
+};
+
 // initialize the drop down list with the list of ids from the json and display
 // data in each panel for a default initial choice of id
 function init() {
@@ -383,52 +407,50 @@ function init() {
           sampleData = getSampleData(defaultItem, samples);
 
           if (sampleData) {
-            // update all of the plots and charts
-            updateMetrics(defaultItem);
-            getTopTen(defaultItem, sampleData);
-            getWashings(defaultItem);
-            drawBubbleChart(defaultItem, sampleData);
+              updatePlotly(defaultItem, sampleData);
           }
           else {console.log("samples not found")};
       }
       else {console.log("item not found")};
-    });
+      });
 };
 
 // This function is called when a dropdown menu item is selected
 function optionChanged(newID) {
 
-    console.log("Getting new data");
     console.log("New id is: " + newID);
 
-    newItem = volunteers.find(function(newVolunteer) {
-        return newVolunteer.id == newID;
-    });
+    // Fetch the new JSON data and log ii
+    fetchData(url).then(data => {
+        names = data.names;
+        volunteers = data.volunteers;
+        samples = data.samples;
+    
+        console.log("names: " + names);
 
-    if (newItem) {
-        console.log("New item is: " + newItem.id);
+        newItem = volunteers.find(function(newVolunteer) {
+          return newVolunteer.id == newID;
+        });
+   
+        if (newItem) {
+          console.log("New item is: " + newItem.id + newItem.location);
 
-        // Call function to update the charts and graphs
-        updatePlotly(newItem);
-      }  
-      else {console.log("item not found")};
+          // get the sample values for this item id
+          let newSampleData = {};
+          newSampleData = getSampleData(newItem, samples);
+
+          if (newSampleData) {
+              // Call function to update the charts and graphs
+              updatePlotly(newItem, newSampleData);
+          }
+            else {console.log("samples not found")};
+        }  
+          else {console.log("item not found")
+        };
+
+  });
 };
-
-// Update the plots for the new data item
-function updatePlotly(newVolunteer) {
-
-     // update all of the plots and charts
-    updateMetrics(newVolunteer);
-    getTopTen(newVolunteer);
-    drawBubbleChart(newVolunteer);
-    getWashings(newVolunteer);
-
-  // Plotly.restyle("bar", "values", [newdata]);
-};
-
 
 init();
 
 d3.selectAll("#selDataset").on("change", optionChanged(newID));
-
-
