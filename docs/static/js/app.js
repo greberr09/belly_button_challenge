@@ -1,7 +1,9 @@
-
+//---------------------------------------------------
 // Application to allow a user to explore data about the various microbes in the
 // human belly button, based on data from the North Carolina State Public Science Lab,
-// see http://robdunnlab.com/projects/belly-button-biodiversity/ for more information.
+// see http://robdunnlab.com/projects/belly-button-biodiversity/ for more information
+// about the study and the readme file in the github repository greberr09/belly_button_challenge
+// for more information about this application project and the code.
 //
 // This application allows a user to select a volunteer study participant from a drop-down
 // list of volunteer ids.  It then displays demographic data about that participant,
@@ -9,55 +11,45 @@
 // bar chart showing the top ten microbes found in the samples taken, and a bubble
 // chart showing the microbes for all samples taken from that participant.  The study participants are 
 // identified by id number, and, in most cases, city and state, but no personally
-// identifiying information is accessible.  A dataset from this study is publically available at
+// identifiying information is accessible.  
+//
+// A dataset from this study is publically available at
 // "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json".
+//
+// The gauge to show washings per week is a bonus part of this project.  The code for that function is included 
+// here and not in the second javascript file, bonus.js, that initially was provided as an empty file.
+//---------------------------------------------------
 
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
-
-// the default volunteer for the initial display of all plots
-const defaultID = 940;
-let defaultItem = {};
-
-// the changed ID that is returned from the html on change of selection
-let newID = defaultID;
-
-// Promise Pending
-const dataPromise = d3.json(url);
-console.log("Data Promise: ", dataPromise);
-
-// define arrays to hold data optained from the json
-
-// the sets of demographic fields available about each volunter
-let fieldnames = [];
-
-// the list of volunter ids
-let names = [];
-
-// the demographic data about each volunteer
-let volunteers = [];
-
-// the sample data taken from each volunteer
-let samples = [];
 
 function getSampleData(item, sampleList) {
 
   sampleData = sampleList.find(function(sampleItem) {
-
-    console.log("Finding sample data for: " + item.id);
     return sampleItem.id == item.id; 
   });
 
-  if (sampleData) {
-    console.log("sample data: " + sampleData.sample_values);}
-    else { console.log ("No sample data found")};
+  if (!Object.keys(sampleData).length)
+    {console.log ("No sample data found")};
 
   return sampleData;
 };
-
-// function to display a table of the demograpic data about the selected volunteer
+//---------------------------------------------------
+// Function to display a table of the demograpic data about the selected volunteer.
+// A decision was made to write this function using raw javascript,
+// as several online sources suggested to do to get certain table attribtues to work.
+// Another way to write this function would be using d3.  A more streamlined version
+// of this function was developed that way (see README), but the hidden and overflow 
+// properties do not work the same way for long data rows in d3, and a css file would 
+// be necessary for the table cell to format long data properly in all browsers.
+// Adding the metric name and its value as a single string, and not in two table
+// data cells, works fine in d3.  The sample solution showed the output that way, but  
+// the data are not aligned for easy readability, so more verbose code was chosen for 
+// better usability.
+//---------------------------------------------------
 function updateMetrics(item) {
 
-    console.log("update Metrics for: " + item.id);
+    // get panel where the table will be built and be
+    // sure it is emptied of any rows from a prior id
 
     metricsPanel = document.querySelector(".panel-body");
     metricsPanel.innerHTML = "";
@@ -71,23 +63,24 @@ function updateMetrics(item) {
     table.width = 140;
     table.innerHTML = "";
 
-    var thead = document.createElement("thead");
-    thead.innerHTML = "";
+    metricsPanel.appendChild(table);
 
+    var thead = document.createElement("thead");
     var tbody = document.createElement("tbody");
-    tbody.innerHTML = "";
-  
-    // Create the header row
-    headerRow = document.createElement("tr");
-    hCell1 = document.createElement("th");
-    hCell2 = document.createElement("th");
+    var headerRow = document.createElement("headerRow");
+
+    hCell1 = document.createElement("th")
     hCell1.textContent = "Metric";
+    hCell1.width = 9;
+    hCell1.style.paddingRight = "24px";
+    hCell2 = document.createElement("th");
     hCell2.textContent = "Value";
   
     headerRow.appendChild(hCell1);
     headerRow.appendChild(hCell2);
-  
     thead.appendChild(headerRow);
+
+    table.appendChild(thead);
   
     // Iterate over the sample item and create table rows
     for (var index in item) {
@@ -97,7 +90,7 @@ function updateMetrics(item) {
         // Create a table row
         row = document.createElement("tr");
 
-        // Create table data for metric
+        // Create table data for metric name
         indexData = document.createElement("td");
         indexData.textContent = index;
         indexData.width = 9;
@@ -111,22 +104,18 @@ function updateMetrics(item) {
         valueData.style.fontSize = "12px";
         valueData.style.overflow = "hidden";
         
+        //---------------------------------------------------
         // A div has to be created inside the cell because
-        // the ellipsis and hidden attributes work as needed on divs not cells.
+        // the ellipsis and hidden properties work as needed on divs not cells.
         // Using a div within the cell and the use of "inline-block", 
         // "nowrap", "hidden", and "ellipsis" to handle very long 
-        // text elements are a combination of extensive research on stackOverflow, 
-        // Chatgpt, and some njavascript training cites aimed at people building 
+        // text elements, are a combination of extensive research on stackOverflow, 
+        // Chatgpt, and some javascript training cites aimed at people building 
         // their own websites, such as css visual dictionary.  While these 
-        // attributes can be applied at the cell level without error, as these
-        // sources discuss, and demonstrated during development, that will not produce 
-        // the desired resulte.   MaxWidth also has to be set to 100% in the div
-        // in order for the ellipsis to work, otherwise the "hidden" attribute will 
-        // cut off the excess text but the ellipsis will not display to indicate 
-        // the extra text.   The word=break and break-all attributes do not recognize 
-        // forward slashes as a break or wrap character, so ellipsis was used rather than 
-        // having the long line break for those few ids were either ethnicity or location overflow.
-
+        // attributes can be applied at the cell level without error,  that will 
+        // not produce the desired resulte.   
+        //---------------------------------------------------
+        
         var div = document.createElement("div");
         div.id = "topTenDiv";
         div.style.maxWidth = "100%";
@@ -138,32 +127,21 @@ function updateMetrics(item) {
         // Add the value for this metric to the div
         div.textContent = value;
 
-        // Append the div to the table cell
+        // Append the div to the table cell, row, and table body
         valueData.appendChild(div);
-
-        // Append the table data to the row
         row.appendChild(indexData);
         row.appendChild(valueData);
-
-        // Append the row to the table body
         tbody.appendChild(row);
     };
 
-    // Append the table components to the panel element
-    metricsPanel.appendChild(table);
-    table.appendChild(thead);
+    // Append the table body to the table
     table.appendChild(tbody);
 };
 
 // function to display a bar graph of the top ten most prevalent microbes for this volunteer 
-function getTopTen(item) {
-  console.log("ttop ten: " + item.id);
-    
-    let sdata = {};
-    let top_ten_otus = [];
-    let top_ten_values = [];
-    let top_ten_labels = [];
+function getTopTen(item, sdata) {
 
+    // get the div that holds the bar chart
     var microbeDiv = document.getElementById("bar");
 
     // get the sample values for this item id
@@ -171,7 +149,9 @@ function getTopTen(item) {
 
     // Reverse the sample data to be in descending number of microbes.
     // This makes use of the fact that the original study data are
-    // entered in the samples array already ordered.
+    // entered in the samples array already ordered.  Javascript
+    // slice() includes the lower bound but not the upper bound.
+
     if (sdata) {
       top_ten_otus = sdata.otu_ids.slice(0, 10);
       top_ten_otus.reverse();
@@ -181,11 +161,6 @@ function getTopTen(item) {
       top_ten_labels.reverse();
     }
 
-    // print results to the console
-    console.log("top ten otus: " + top_ten_otus);
-    console.log("top ten data: " + top_ten_values);
-    console.log("top ten microbes: " + top_ten_labels);
-
     // Define plot data and layout
     var microbeData = [{
         x: top_ten_values,
@@ -194,13 +169,13 @@ function getTopTen(item) {
         text: top_ten_labels
     }];
 
-    var layout = {
+    var microbeLayout = {
       title: {
           text: 'Top Ten Most Prevalent Microbes',
           font: {
             size: 18,
             weight: 'bold'
-        }
+          }
       },
       xaxis: {
         title: {
@@ -231,78 +206,74 @@ function getTopTen(item) {
     };
   
     // Create the plot using Plotly
-    Plotly.newPlot(microbeDiv, microbeData, layout);
-
+    Plotly.newPlot(microbeDiv, microbeData, microbeLayout);
 };
   
 // function to draw a bubble chart of the microbes in this volunteer's samples
-function drawBubbleChart(item) {
+function drawBubbleChart(item, itemSamples) {
 
-    console.log("Bubble chart for: " + item.id);
-  
-    var bubbleDiv = document.getElementById("bubble");
+    // get div for the bubble chart
+    let bubbleDiv = document.getElementById("bubble");
 
-    let sampleData = {};
-
-    // get the sample values for this item id
-    sampleData = getSampleData(item, samples);
-
-    // Define plot data and layout
-    // Set sizemode to area of plot rather than diameter to handle small sample sizes
+    //---------------------------------------------------
+    // Define plot data and layout.  Set sizemode to area of plot
+    // rather than diameter to handle small sample sizes.
     // Set sizeref to value as small as possible so that bubbles are not 
     // too big for sample sizes of ten but are visible for sample sizes of 3 and 4
+    // These settings were determined by trial and error on a selected set of
+    // volunteer ids that had extremes, and then a varying set of others chosen
+    // differently for each run.
+    //---------------------------------------------------
   
-    var bubbleData = [];
-
-    if (sampleData) {
-      bubbleData = [{
-      x: sampleData.otu_ids,
-      y: sampleData.sample_values,
-      text: sampleData.otu_labels,
+    var bubbleData = [{
+      x: itemSamples.otu_ids,
+      y: itemSamples.sample_values,
+      text: itemSamples.otu_labels,
       type: 'bubble',
       mode: 'markers',
       marker: {
-        size: sampleData.sample_values,
-        color: sampleData.otu_ids,
+        size: itemSamples.sample_values,
+        color: itemSamples.otu_ids,
         colorscale: 'Viridis',
         sizemode: 'area',  
         sizeref: 0.05   
         }
-      }];
-  };
+    }];
 
-    var layout = {
+    var bubbleLayout = {
       title: 'Microbes per Sample',
       xaxis: { title: 'OTU ID' },
-      yaxis: { title: 'Number of Microbes' }
+      yaxis: { title: 'Number of Microbes' },
+      hovermode: "closest",
     };
   
     // Create the plot using Plotly
-    Plotly.newPlot(bubbleDiv, bubbleData, layout);
+    Plotly.newPlot(bubbleDiv, bubbleData, bubbleLayout);
   
   };
 
-// bonus function to display a gauge of the times per week this volunteer scrubs the belly button
+//---------------------------------------------------
+// Bonus function to display a gauge of the times per week this volunteer scrubs the belly button
+// This code is included here and not in the separate bonus.js file originally provided.
+// The formatting of the gauge with the moving bar approaching the threshold is based on one
+// of the sample gauges in the Plotly documentation, with modifications.
+//---------------------------------------------------
 function getWashings(item) {
-
-    console.log("get washings for: " + item.id);
 
     var washingDiv = document.getElementById("gauge");
 
     var numWashings = item.wfreq;
-    console.log("num washings: " + numWashings);
 
     if (numWashings == null) {
         numWashings = 0};
 
-    var gauge_data = [
+    var gaugeData = [
         {
           type: "indicator",
           mode: "gauge+number+delta", 
           value: numWashings,
       
           title: { text: "Belly Button Washing Frequency <br><sub>Scrubs Per Week</sub>", font: { size: 18 } },  
-      
           delta: { reference: 7, increasing: { color: "RebeccaPurple" } },
       
           gauge: {
@@ -333,106 +304,118 @@ function getWashings(item) {
         }
       ];
 
-      var layout = {
-        //width: 400,
-        //height: 350,
+      var gaugeLayout = {
         margin: { t: 25, r: 25, l: 25, b: 25 },
         paper_bgcolor: "white",
         font: { color: "darkblue", family: "Arial" }
       };
       
-      Plotly.newPlot(washingDiv, gauge_data, layout);
+      // draw the plot
+      Plotly.newPlot(washingDiv, gaugeData, gaugeLayout);
 };
 
+// get initial study data from NC website
+function fetchData(url) {
+  return d3.json(url).then(data => {
+    return {
+      names: data.names,
+      volunteers: data.metadata,
+      samples: data.samples,
+    };
+  });
+};
+
+function buildDropdown(names) {
+
+  // Access the dropdown menu element
+  var dropdownMenu = document.getElementById("selDataset");
+
+  // add the list of names to the selection
+  names.forEach(name => {
+    let option = document.createElement("option");
+    option.value = name;
+    option.text = name;
+    dropdownMenu.appendChild(option);
+  });
+};
+
+function updatePlotly(newVolunteer, newSample) {
+
+    // Update the tables, gauges, and plots for the new data item
+    updateMetrics(newVolunteer);
+    getTopTen(newVolunteer, newSample);
+    drawBubbleChart(newVolunteer, newSample);
+    getWashings(newVolunteer);
+};
+
+//---------------------------------------------------
 // initialize the drop down list with the list of ids from the json and display
 // data in each panel for a default initial choice of id
+//---------------------------------------------------
 function init() {
 
     // Fetch the JSON data and log it
-
-    d3.json(url).then(function(data) {
-      console.log(data);
-
+    fetchData(url).then(data => {
       names = data.names;
-      volunteers = data.metadata;
+      volunteers = data.volunteers;
       samples = data.samples;
-      fieldnames = Object.keys(volunteers[0]);
-      samplenames = Object.keys(samples[0]);
 
-      console.log("Volunteer ids: " + names);
-  
-      console.log(fieldnames);
-      console.log(samplenames);
-      console.log("getting sample data for volunter 3: " + samples[2].otu_ids);
+      console.log("names: " + names);
 
-      // Access the dropdown menu element
-      var dropdownMenu = document.getElementById("selDataset");
+      // Build the drop down list of study participants
+      buildDropdown(names);
 
-      let sample = defaultID;
+      defaultID = names[0];
 
-      // Create the options for the dropdown menu
-      for (let i = 0; i < names.length; i++) {
-
-        sample = names[i];
-
-        option = document.createElement("option");
-        option.value = sample;
-        option.text = sample;
-        dropdownMenu.appendChild(option);
-      };
+      // Build all tables, charts, and gauges for the default id
     
       defaultItem = volunteers.find(function(volunteer) {
-        console.log("in find default id is: " + defaultID);
         return volunteer.id == defaultID;
       });
 
       if (defaultItem) {
-          console.log ("Default item is: " + defaultItem.id);
 
-          // update all of the plots and charts
-          updateMetrics(defaultItem);
-          getTopTen(defaultItem);
-          getWashings(defaultItem);
-          drawBubbleChart(defaultItem);
+          // get the sample values for this item id
+          var sampleData = getSampleData(defaultItem, samples);
+
+          if (sampleData) {
+              updatePlotly(defaultItem, sampleData);
+          }
+          else {console.log("samples not found for item " + defaultItem)};
       }
-      else {console.log("item not found")};
-    });
+      else {console.log("No data for item " + defaultItem)};
+      });
 };
 
-// This function is called when a dropdown menu item is selected
+// This function is called within the index.html when a dropdown menu item is selected
 function optionChanged(newID) {
 
-    console.log("Getting new data");
-    console.log("New id is: " + newID);
+    // Fetch the new JSON data and log ii
+    fetchData(url).then(data => {
+        names = data.names;
+        volunteers = data.volunteers;
+        samples = data.samples;
 
-    newItem = volunteers.find(function(newVolunteer) {
-        return newVolunteer.id == newID;
-    });
+        newItem = volunteers.find(function(newVolunteer) {
+          return newVolunteer.id == newID;
+        });
+   
+        if (newItem) {
+          // get the sample values for this item id        
+          let newSampleData = getSampleData(newItem, samples);
 
-    if (newItem) {
-        console.log("New item is: " + newItem.id);
+          if (newSampleData) {
+              // Call function to update the charts and graphs
+              updatePlotly(newItem, newSampleData);
+          }
+            else {console.log("samples for" + newID + "not found")};
+        }  
+          else {console.log("item " + newID + " not found")
+        };
 
-        // Call function to update the charts and graphs
-        updatePlotly(newItem);
-      }  
-      else {console.log("item not found")};
+  });
 };
-
-// Update the plots for the new data item
-function updatePlotly(newVolunteer) {
-
-     // update all of the plots and charts
-    updateMetrics(newVolunteer);
-    getTopTen(newVolunteer);
-    drawBubbleChart(newVolunteer);
-    getWashings(newVolunteer);
-
-  // Plotly.restyle("bar", "values", [newdata]);
-};
-
 
 init();
 
 d3.selectAll("#selDataset").on("change", optionChanged(newID));
-
-
